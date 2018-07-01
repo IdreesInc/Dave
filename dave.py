@@ -43,7 +43,7 @@ class Servo:
         delta = 170
         if self.current_angle != -1337:
             delta = math.fabs(self.current_angle - angle)
-            if not self.isWithinBounds(angle):
+            if not self.is_within_bounds(angle):
                 log("Angle outside of [%s]'s bounds: %s <= %s <= %s" % (self.name, self.min, angle, self.max), LogType.ERROR)
                 return -1
         self.current_angle = angle
@@ -57,7 +57,7 @@ class Servo:
             Timer(delay, callback).start()
         return delay
 
-    def isWithinBounds(self, angle):
+    def is_within_bounds(self, angle):
         return angle >= self.min and angle <= self.max
 
     def rest(self):
@@ -79,8 +79,8 @@ class Arm:
         self.a_servo = Servo(2, "a", self.A_VERTICAL - self.A_MIN_FROM_VERTICAL, self.A_VERTICAL + self.A_MAX_FROM_VERTICAL)
         self.claw_servo = Servo(3, "claw", -85, 85)
 
-    def open_claw(self):
-        self.claw_servo.set_angle(70)
+    def open_claw(self, callback=None):
+        self.claw_servo.set_angle(70, callback)
 
 
     def close_claw(self):
@@ -124,7 +124,7 @@ class Arm:
             log("[Triangle] a: %s, b: %s, angle from horiz: %s" % (triangle_a, triangle_b, angle_from_horizontal), LogType.DEBUG)
             servo_angle_a = 90 - triangle_a - angle_from_horizontal
             servo_angle_b = triangle_b - servo_angle_a + angle_from_horizontal
-            if not self.a_servo.isWithinBounds(self.A_VERTICAL + servo_angle_a) or not self.b_servo.isWithinBounds(self.B_VERTICAL + servo_angle_b):
+            if not self.a_servo.is_within_bounds(self.A_VERTICAL + servo_angle_a) or not self.b_servo.is_within_bounds(self.B_VERTICAL + servo_angle_b):
                 log("Coordinates out of range due to servo constraints", LogType.ERROR)
                 return False
             self.a_servo.set_angle(self.A_VERTICAL + servo_angle_a)
@@ -206,8 +206,7 @@ def update():
                     dave.a_servo.set_angle(0, dave.b_servo.rest)
                 elif command[0] == "hi" or command[0] == "hello" or command[0] == "greet":
                     log("Hello!")
-                    dave.open_claw()
-                    dave.close_claw()
+                    dave.open_claw(dave.close_claw)
                 else:
                     log("Command '%s' not recognized" % (input), LogType.ERROR)
         dave.reset_servos()
