@@ -11,7 +11,7 @@ This project is a work in progress, meaning that I am updating this repo as I go
 
 ## Current Features
 - Implemented ability to set servo angles via Raspberry Pi and Adafruit Servo Hat
-- As of July 1st, implemented cartesian coordinate system which allows me to use standard x and y coordinates to accurately move the arm to within 1 mm accuracy
+- As of July 1st, implemented [cartesian coordinate system](https://github.com/IdreesInc/EEZYbotARM-MK2-Cartesian-Coordinates) which allows me to use standard x and y coordinates to accurately move the arm to within 1 mm accuracy
 
 ### Next Goal
 - Implement game piece detection using OpenCV in a lightweight manner
