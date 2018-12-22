@@ -30,6 +30,12 @@ def log(message, type=Level.NORMAL):
         elif type == Level.ERROR:
             print(CColors.ERROR + "ERROR: " + message + CColors.ENDC)
 
+def warn(message):
+    log(message, Level.WARNING)
+
+def error(message):
+    log(message, Level.ERROR)
+
 def prompt(message):
     print(CColors.GREEN + message + CColors.ENDC)
     return raw_input()

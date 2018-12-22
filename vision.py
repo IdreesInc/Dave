@@ -10,22 +10,18 @@ import time
 import logger
 
 class Eye:
-    def start(self, task):
+    def start(self):
         self.cam = VideoStream(src=0).start()
-        self.task = task
 
     def look(self):
         self.frame = self.cam.read()
         return self.frame
 
-    def stop(self):
-        self.cam.stream.release()
-
     def find_card(self):
         lower = np.array([155, 90, 75])
         upper = np.array([179, 255, 255])
 
-        copy = imutils.resize(self.frame, width=600)
+        copy = imutils.resize(self.frame, width=1000)
         blurred = cv2.GaussianBlur(copy, (11, 11), 0)
         hsv = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)
 

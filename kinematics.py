@@ -33,8 +33,8 @@ class Servo:
         zero_pulse = (self.servoMin + self.servoMax) / 2  # half-way == 0 degrees
         pulse_width = zero_pulse - self.servoMin  # maximum pulse to either side
         pulse = zero_pulse + (pulse_width * angle / 80)
+        logger.log("[%s] channel=%s angle=%s pulse=%s delta=%s delay=%s" % (self.name, self.channel, angle, pulse, delta, delay), logger.Level.DEBUG)
         pwm.set_pwm(self.channel, 0, int(pulse))
-        logger.log("[%s] channel=%s angle=%s pulse=%s delta=%s" % (self.name, self.channel, angle, pulse, delta), logger.Level.DEBUG)
         if callback != None:
             Timer(delay, callback).start()
         return delay
@@ -60,6 +60,8 @@ class Arm:
         self.b_servo = Servo(1, "b", self.B_VERTICAL - self.B_MIN_FROM_VERTICAL, self.B_VERTICAL + self.B_MAX_FROM_VERTICAL)
         self.a_servo = Servo(2, "a", self.A_VERTICAL - self.A_MIN_FROM_VERTICAL, self.A_VERTICAL + self.A_MAX_FROM_VERTICAL)
         self.claw_servo = Servo(3, "claw", -85, 85)
+
+        self.last_move = None
 
     def open_claw(self, callback=None):
         self.claw_servo.set_angle(70, callback)
@@ -93,7 +95,7 @@ class Arm:
         """ Performs the Law of Cosines on the given side lengths """
         return math.degrees(math.acos((c**2 - b**2 - a**2)/(-2.0 * a * b)))
 
-    def move(self, x, y):
+    def move_to(self, x, y):
         """ Returns the angles necessary to reach the given coordinate point """
         distance_to_goal = self.distance((0, 0), (x, y))
         if distance_to_goal == 0:
@@ -112,6 +114,7 @@ class Arm:
             self.a_servo.set_angle(self.A_VERTICAL + servo_angle_a)
             self.b_servo.set_angle(self.B_VERTICAL + servo_angle_b)
             logger.log("[Servos] a: %s, b: %s" % (servo_angle_a, servo_angle_b), logger.Level.DEBUG)
+            self.last_move = [x, y]
             return True
         except ValueError:
             logger.log("Coordinates out of range due to the physical laws of the universe", logger.Level.ERROR)
