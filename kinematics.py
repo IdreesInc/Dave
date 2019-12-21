@@ -1,14 +1,19 @@
 #!/usr/bin/python
 
-import Adafruit_PCA9685
+import adafruit_pca9685
+from adafruit_servokit import ServoKit
 from threading import Timer
 import math
 import time
 import logger
+import board
+import busio
 
 # Hardware initialization
-pwm = Adafruit_PCA9685.PCA9685()
-pwm.set_pwm_freq(60)
+i2c = busio.I2C(board.SCL, board.SDA)
+pwm = adafruit_pca9685.PCA9685(i2c)
+pwm.frequency = 60
+kit = ServoKit(channels=16)
 
 class Servo:
     def __init__(self, channel, name, min, max):
@@ -17,67 +22,69 @@ class Servo:
         self.min = min
         self.max = max
         self.current_angle = -1337
-        self.servoMin = 150  # Min pulse length out of 4096
-        self.servoMax = 600  # Max pulse length out of 4096
+        self.servoMin = 750  # Min pulse length out of 4096
+        self.servoMax = 2500  # Max pulse length out of 4096
+        kit.servo[self.channel].set_pulse_width_range(self.servoMin, self.servoMax)
 
     def set_angle(self, angle, callback=None):
-        # log("Moving %s to angle %s" % (self.name, angle))
-        delta = 170
-        if self.current_angle != -1337:
-            delta = math.fabs(self.current_angle - angle)
-            if not self.is_within_bounds(angle):
-                logger.log("Angle outside of [%s]'s bounds: %s <= %s <= %s" % (self.name, self.min, angle, self.max), logger.Level.ERROR)
-                return -1
+        if not self.is_within_bounds(angle):
+            logger.log("Angle outside of [%s]'s bounds: %s <= %s <= %s" % (self.name, self.min, angle, self.max), logger.Level.ERROR)
+            return -1
+        logger.log("Moving %s to angle %s" % (self.name, angle), logger.Level.DEBUG)
+        kit.servo[self.channel].angle = angle
         self.current_angle = angle
-        delay = max(delta * 0.01, 0.01)  # calculate delay
-        zero_pulse = (self.servoMin + self.servoMax) / 2  # half-way == 0 degrees
-        pulse_width = zero_pulse - self.servoMin  # maximum pulse to either side
-        pulse = zero_pulse + (pulse_width * angle / 80)
-        logger.log("[%s] channel=%s angle=%s pulse=%s delta=%s delay=%s" % (self.name, self.channel, angle, pulse, delta, delay), logger.Level.DEBUG)
-        pwm.set_pwm(self.channel, 0, int(pulse))
+        delta = 170
         if callback != None:
-            Timer(delay, callback).start()
-        return delay
+            Timer(1, callback).start()
+        return 1
 
     def is_within_bounds(self, angle):
         return angle >= self.min and angle <= self.max
 
     def rest(self):
-        pwm.set_pwm(self.channel, 0, 0)
+        # pwm.setPWM(self.channel, 0, 0)
+        # kit.servo[self.channel].angle = 0
+        kit.servo[self.channel].angle = None
+        self.current_angle = -1
+        logger.log("Resting %s" % (self.name), logger.Level.DEBUG) 
 
 class Arm:
     def __init__(self):
         self.INNER_ARM_LENGTH = 134.5
         self.OUTER_ARM_LENGTH = 148
-        self.A_VERTICAL = -63          # a servo angle when wing is vertical
-        self.B_VERTICAL = -15          # b servo angle when wing is vertical
-        self.A_MIN_FROM_VERTICAL = 7   # a servo minimum degrees from vertical [vert - min]
-        self.B_MIN_FROM_VERTICAL = -10 # b servo minimum degrees from vertical [vert - min]
-        self.A_MAX_FROM_VERTICAL = 78  # a servo minimum degrees from vertical [vert + max]
-        self.B_MAX_FROM_VERTICAL = 97  # b servo minimum degrees from vertical [vert + max]
+        self.ROT_CENTER = 90
+        self.ROT_MIN = 0
+        self.ROT_MAX = 180
+        self.A_VERTICAL = 7 # a servo angle when wing is vertical
+        self.B_VERTICAL = 50 # b servo angle when wing is vertical
+        self.A_MIN = 10
+        self.B_MIN = 70
+        self.A_MAX = 100
+        self.B_MAX = 180
+        self.CLAW_MIN = 80
+        self.CLAW_MAX = 145
 
-        self.rot_servo = Servo(0, "rot", -85, 85)
-        self.b_servo = Servo(1, "b", self.B_VERTICAL - self.B_MIN_FROM_VERTICAL, self.B_VERTICAL + self.B_MAX_FROM_VERTICAL)
-        self.a_servo = Servo(2, "a", self.A_VERTICAL - self.A_MIN_FROM_VERTICAL, self.A_VERTICAL + self.A_MAX_FROM_VERTICAL)
-        self.claw_servo = Servo(3, "claw", -85, 85)
+        self.rot_servo = Servo(0, "rot", self.ROT_MIN, self.ROT_MAX)
+        self.b_servo = Servo(1, "b", self.B_MIN, self.B_MAX)
+        self.a_servo = Servo(2, "a", self.A_MIN, self.A_MAX)
+        self.claw_servo = Servo(3, "claw", 80, 145)
 
         self.last_move = None
 
     def open_claw(self, callback=None):
-        self.claw_servo.set_angle(70, callback)
+        self.claw_servo.set_angle(145, callback)
 
 
     def close_claw(self):
-        self.claw_servo.set_angle(-1)
-        self.claw_servo.set_angle(0)
+        self.claw_servo.set_angle(self.claw_servo.min)
 
 
     def reset_servos(self):
         """ Reset servos to original location """
-        self.rot_servo.set_angle(0)
-        self.claw_servo.set_angle(0)
-        self.a_servo.set_angle(0)
-        self.b_servo.set_angle(0)
+        self.rot_servo.set_angle(self.ROT_CENTER)
+        self.claw_servo.set_angle(90)
+        self.a_servo.set_angle(45)
+        self.close_claw()
 
 
     def rest_servos(self):
@@ -109,6 +116,7 @@ class Arm:
             servo_angle_a = 90 - triangle_a - angle_from_horizontal
             servo_angle_b = triangle_b - servo_angle_a + angle_from_horizontal
             if not self.a_servo.is_within_bounds(self.A_VERTICAL + servo_angle_a) or not self.b_servo.is_within_bounds(self.B_VERTICAL + servo_angle_b):
+                logger.log("[Servos] a: %s, b: %s" % (self.A_VERTICAL + servo_angle_a, self.B_VERTICAL + servo_angle_b), logger.Level.ERROR)
                 logger.log("Coordinates out of range due to servo constraints", logger.Level.ERROR)
                 return False
             self.a_servo.set_angle(self.A_VERTICAL + servo_angle_a)

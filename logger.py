@@ -38,4 +38,4 @@ def error(message):
 
 def prompt(message):
     print(CColors.GREEN + message + CColors.ENDC)
-    return raw_input()
+    return input()

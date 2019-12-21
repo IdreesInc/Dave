@@ -7,7 +7,7 @@ import math
 
 import logger
 from kinematics import Arm
-from vision import Eye
+# from vision import Eye
 
 if len(sys.argv) > 1 and sys.argv[1] == "debug":
     logger.log_level = logger.Level.DEBUG
@@ -32,18 +32,20 @@ class Thready (threading.Thread):
         self.running = False
 
 arm = Arm()
-eye = Eye()
+# eye = Eye()
 running = True
 task = "none"
 
 def start():
+    arm.rest_servos()
+    # sys.exit()
     logger.log("Starting up...")
     logger.log("Stretching arm...")
     arm.reset_servos()
     time.sleep(1)
     arm.open_claw(arm.close_claw())
-    logger.log("Putting on glasses...")
-    eye.start()
+    # logger.log("Putting on glasses...")
+    # eye.start()
     logger.log("Starting to listen...")
     input_thread = threading.Thread(name='input_thread', target=get_input)
     start_task("hi")
@@ -75,15 +77,15 @@ def update():
             time.sleep(0.75)
             arm.close_claw()
             task = "none"
-        elif task == "target":
-            eye.look()
-            target = eye.find_card()
-            if target is not None:
-                dist = 10
-                if target[1] > dist * 10:
-                    arm.move_to(arm.last_move[0], arm.last_move[1] - dist)
-                elif target[1] < -dist * 10:
-                    arm.move_to(arm.last_move[0], arm.last_move[1] + dist)
+        # elif task == "target":
+            # eye.look()
+            # target = eye.find_card()
+            # if target is not None:
+            #     dist = 10
+            #     if target[1] > dist * 10:
+            #         arm.move_to(arm.last_move[0], arm.last_move[1] - dist)
+            #     elif target[1] < -dist * 10:
+            #         arm.move_to(arm.last_move[0], arm.last_move[1] + dist)
     logger.log("Resting arm...")
     arm.reset_servos()
     time.sleep(0.75)
@@ -131,13 +133,13 @@ def get_input():
             elif command[0] == "down":
                 arm.b_servo.set_angle(0, arm.b_servo.rest)
             elif command[0] == "left":
-                arm.rot_servo.set_angle(-80, arm.b_servo.rest)
+                arm.rot_servo.set_angle(arm.ROT_MIN, arm.rot_servo.rest)
             elif command[0] == "right":
-                arm.rot_servo.set_angle(80, arm.b_servo.rest)
+                arm.rot_servo.set_angle(arm.ROT_MAX, arm.rot_servo.rest)
             elif command[0] == "back":
-                arm.a_servo.set_angle(-70, arm.b_servo.rest)
+                arm.a_servo.set_angle(-70, arm.a_servo.rest)
             elif command[0] == "forward":
-                arm.a_servo.set_angle(0, arm.b_servo.rest)
+                arm.a_servo.set_angle(0, arm.a_servo.rest)
             elif command[0] == "hi" or command[0] == "hello" or command[0] == "greet":
                 start_task("hi")
             else:
