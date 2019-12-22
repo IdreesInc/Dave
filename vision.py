@@ -9,13 +9,22 @@ import time
 
 import logger
 
+debug = True
+
 class Eye:
     def start(self):
-        self.cam = VideoStream(src=0).start()
+        logger.log("Starting eye")
+        self.cam = cv2.VideoCapture(0)
 
     def look(self):
-        self.frame = self.cam.read()
-        return self.frame
+        ret_val, img = self.cam.read()
+        self.frame = img
+        return img
+
+    def show_image(self, image):
+        cv2.imshow('Dave', image)
+        if cv2.waitKey(1) == 27: 
+            return  # esc to quit
 
     def find_card(self):
         lower = np.array([155, 90, 75])
@@ -51,19 +60,12 @@ class Eye:
                 offsetY = int(cY - height / 2)
                 return offsetX, offsetY
 
-    #         if debug:
-    #             cv2.drawContours(frame, [biggest_contour], -1, (0, 255, 0), 2)
-    #             cv2.circle(frame, (cX, cY), 7, (255, 255, 255), -1)
-    #             cv2.putText(frame, str(offsetX) + " " + str(offsetY), (cX - 30, cY - 20),
-    #             cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
-    # if debug:
-    #     cv2.imshow("Circles", frame)
 
+class EyeThread (threading.Thread):
+   def __init__(self, eye):
+        threading.Thread.__init__(self)
+        self.eye = eye
 
-# class EyeThread (threading.Thread):
-#    def __init__(self, eye):
-#       threading.Thread.__init__(self)
-#       self.eye = eye
-
-#    def run(self):
-#       self.eye.look()
+   def run(self):
+        self.eye.look()
+        logger.log

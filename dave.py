@@ -4,10 +4,11 @@ import sys
 import time
 import threading
 import math
+import cv2
 
 import logger
 from kinematics import Arm
-# from vision import Eye
+from vision import Eye
 
 if len(sys.argv) > 1 and sys.argv[1] == "debug":
     logger.log_level = logger.Level.DEBUG
@@ -31,20 +32,21 @@ class Thready (threading.Thread):
     def stop(self):
         self.running = False
 
+logger.log("Starting up...")
 arm = Arm()
-# eye = Eye()
+eye = Eye()
+eye.start()
 running = True
 task = "none"
 
 def start():
     arm.rest_servos()
     # sys.exit()
-    logger.log("Starting up...")
     logger.log("Stretching arm...")
     arm.reset_servos()
     time.sleep(1)
     arm.open_claw(arm.close_claw())
-    # logger.log("Putting on glasses...")
+    logger.log("Putting on glasses...")
     # eye.start()
     logger.log("Starting to listen...")
     input_thread = threading.Thread(name='input_thread', target=get_input)
@@ -56,6 +58,7 @@ def shutdown():
     global running
     logger.log("Shutting down...")
     running = False
+    cv2.destroyAllWindows()
 
 def start_task(tsk):
     global task
@@ -63,10 +66,10 @@ def start_task(tsk):
     if tsk == "hi":
         logger.log("Hello!")
     elif tsk == "target":
-        arm.move_to(140, 25)
-    else:
-        logger.error("Task '%s' does not exist" % (tsk))
-        return
+        logger.log("Targeting...")
+    # else:
+    #     logger.error("Task '%s' does not exist" % (tsk))
+    #     return
     task = tsk
 
 def update():
@@ -77,8 +80,9 @@ def update():
             time.sleep(0.75)
             arm.close_claw()
             task = "none"
-        # elif task == "target":
-            # eye.look()
+        elif task == "target":
+            img = eye.look()
+            eye.show_image(img)
             # target = eye.find_card()
             # if target is not None:
             #     dist = 10
@@ -86,6 +90,7 @@ def update():
             #         arm.move_to(arm.last_move[0], arm.last_move[1] - dist)
             #     elif target[1] < -dist * 10:
             #         arm.move_to(arm.last_move[0], arm.last_move[1] + dist)
+    cv2.destroyAllWindows()
     logger.log("Resting arm...")
     arm.reset_servos()
     time.sleep(0.75)
@@ -93,6 +98,7 @@ def update():
     time.sleep(1)
     logger.log("Goodbye!")
     logger.log("Update loop stopped", logger.Level.DEBUG)
+    sys.exit()
 
 def get_input():
     logger.log("I am ready to go!")

@@ -42,8 +42,6 @@ class Servo:
         return angle >= self.min and angle <= self.max
 
     def rest(self):
-        # pwm.setPWM(self.channel, 0, 0)
-        # kit.servo[self.channel].angle = 0
         kit.servo[self.channel].angle = None
         self.current_angle = -1
         logger.log("Resting %s" % (self.name), logger.Level.DEBUG) 
