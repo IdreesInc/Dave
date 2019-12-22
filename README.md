@@ -9,6 +9,12 @@ This project is a work in progress, meaning that I am updating this repo as I go
 - [Raspberry Pi 3](https://www.raspberrypi.org) for processing
 - [Adafruit Servo Hat](https://www.adafruit.com/product/2327) for easy servo controls
 
+## Libraries Used
+- Adafruit CircuitPython [ServoKit](https://github.com/adafruit/Adafruit_CircuitPython_ServoKit)
+- Adafruit Servo Hat [requirements](https://learn.adafruit.com/adafruit-16-channel-pwm-servo-hat-for-raspberry-pi/attach-and-test-the-hat)
+- OpenCV 4 and related requirements (following [these](https://www.pyimagesearch.com/2019/09/16/install-opencv-4-on-raspberry-pi-4-and-raspbian-buster/) instructions [does not require patented algorithms])
+
+
 ## Current Features
 - Implemented ability to set servo angles via Raspberry Pi and Adafruit Servo Hat
 - As of July 1st, implemented [cartesian coordinate system](https://github.com/IdreesInc/EEZYbotARM-MK2-Cartesian-Coordinates) which allows me to use standard x and y coordinates to accurately move the arm to within 1 mm accuracy
