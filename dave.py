@@ -1,5 +1,5 @@
 #!/usr/bin/python
-
+# pylint: disable=import-error
 import sys
 import time
 import threading
@@ -50,7 +50,7 @@ def start():
     # eye.start()
     logger.log("Starting to listen...")
     input_thread = threading.Thread(name='input_thread', target=get_input)
-    start_task("hi")
+    start_task("target")
     input_thread.start()
     update()
 
@@ -82,7 +82,9 @@ def update():
             task = "none"
         elif task == "target":
             img = eye.look()
-            eye.show_image(img)
+            newImg = eye.detect_qr_codes(img)
+            eye.show_image(newImg)
+            # eye.show_image(newImg)
             # target = eye.find_card()
             # if target is not None:
             #     dist = 10
