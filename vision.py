@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 # pylint: disable=import-error
 
 import cv2
@@ -32,7 +32,7 @@ class Eye:
             return  # esc to quit
 
     def detect_qr_codes(self, image):
-        frame = imutils.resize(image, width = 400)
+        frame = imutils.resize(image)
         barcodes = pyzbar.decode(frame)
 
         # https://www.pyimagesearch.com/2018/05/21/an-opencv-barcode-and-qr-code-scanner-with-zbar/

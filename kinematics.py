@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 import adafruit_pca9685
 from adafruit_servokit import ServoKit
@@ -21,19 +21,19 @@ class Servo:
         self.name = name
         self.min = min
         self.max = max
-        self.current_angle = -1337
+        self.current_angle = kit.servo[self.channel].angle
         self.servoMin = 750  # Min pulse length out of 4096
         self.servoMax = 2500  # Max pulse length out of 4096
         kit.servo[self.channel].set_pulse_width_range(self.servoMin, self.servoMax)
 
-    def set_angle(self, angle, callback=None):
-        if not self.is_within_bounds(angle):
+    def set_angle(self, angle, callback=None, force=False, testing=False):
+        if not force and not self.is_within_bounds(angle):
             logger.log("Angle outside of [%s]'s bounds: %s <= %s <= %s" % (self.name, self.min, angle, self.max), logger.Level.ERROR)
             return -1
         logger.log("Moving %s to angle %s" % (self.name, angle), logger.Level.DEBUG)
-        kit.servo[self.channel].angle = angle
+        if not testing:
+            kit.servo[self.channel].angle = angle
         self.current_angle = angle
-        delta = 170
         if callback != None:
             Timer(1, callback).start()
         return 1
@@ -49,7 +49,9 @@ class Servo:
 class Arm:
     def __init__(self):
         self.INNER_ARM_LENGTH = 134.5
+        # self.INNER_ARM_LENGTH = 120
         self.OUTER_ARM_LENGTH = 148
+        self.BACK_BAR_LENGTH = 56.6
         self.ROT_CENTER = 90
         self.ROT_MIN = 0
         self.ROT_MAX = 180
@@ -57,10 +59,12 @@ class Arm:
         self.B_VERTICAL = 50 # b servo angle when wing is vertical
         self.A_MIN = 10
         self.B_MIN = 70
-        self.A_MAX = 100
+        self.A_MAX = 80
         self.B_MAX = 180
         self.CLAW_MIN = 80
         self.CLAW_MAX = 145
+        self.X_MIN = 10
+        self.Y_MIN = -70
 
         self.rot_servo = Servo(0, "rot", self.ROT_MIN, self.ROT_MAX)
         self.b_servo = Servo(1, "b", self.B_MIN, self.B_MAX)
@@ -81,7 +85,7 @@ class Arm:
         """ Reset servos to original location """
         self.rot_servo.set_angle(self.ROT_CENTER)
         self.claw_servo.set_angle(90)
-        self.a_servo.set_angle(45)
+        self.move_to(140, 0)
         self.close_claw()
 
 
@@ -100,11 +104,17 @@ class Arm:
         """ Performs the Law of Cosines on the given side lengths """
         return math.degrees(math.acos((c**2 - b**2 - a**2)/(-2.0 * a * b)))
 
-    def move_to(self, x, y):
-        """ Returns the angles necessary to reach the given coordinate point """
+    def move_to(self, x, y, testing = False):
+        """ Moves to the given coordinate point """
         distance_to_goal = self.distance((0, 0), (x, y))
         if distance_to_goal == 0:
             logger.log("Cannot move to origin", logger.Level.ERROR)
+            return False
+        if x < self.X_MIN:
+            logger.log("X must be greater than %s" % (self.X_MIN), logger.Level.ERROR)
+            return False
+        if y < self.Y_MIN:
+            logger.log("Y must be greater than %s" % (self.Y_MIN), logger.Level.ERROR)
             return False
         angle_from_horizontal = math.degrees(math.asin(y / distance_to_goal))
         try:
@@ -117,8 +127,8 @@ class Arm:
                 logger.log("[Servos] a: %s, b: %s" % (self.A_VERTICAL + servo_angle_a, self.B_VERTICAL + servo_angle_b), logger.Level.ERROR)
                 logger.log("Coordinates out of range due to servo constraints", logger.Level.ERROR)
                 return False
-            self.a_servo.set_angle(self.A_VERTICAL + servo_angle_a)
-            self.b_servo.set_angle(self.B_VERTICAL + servo_angle_b)
+            self.a_servo.set_angle(self.A_VERTICAL + servo_angle_a, testing=testing)
+            self.b_servo.set_angle(self.B_VERTICAL + servo_angle_b, testing=testing)
             logger.log("[Servos] a: %s, b: %s" % (servo_angle_a, servo_angle_b), logger.Level.DEBUG)
             self.last_move = [x, y]
             return True

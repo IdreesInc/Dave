@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 # pylint: disable=import-error
 
 import sys
@@ -51,7 +51,7 @@ def start():
     # eye.start()
     logger.log("Starting to listen...")
     input_thread = threading.Thread(name='input_thread', target=get_input)
-    start_task("target")
+    # start_task("target")
     input_thread.start()
     update()
 
@@ -122,6 +122,15 @@ def get_input():
         elif len(command) == 3:
             if command[0] == "go" or command[0] == "move":
                 arm.move_to(float(command[1]), float(command[2]))
+            if command[0] == "force":
+                if command[1] == "r" or command[1] == "rot" or command[1] == "rotation":
+                    arm.rot_servo.set_angle(float(command[2]), force=True)
+                elif command[1] == "b":
+                    arm.b_servo.set_angle(float(command[2]), force=True)
+                elif command[1] == "a":
+                    arm.a_servo.set_angle(float(command[2]), force=True)
+                elif command[1] == "c" or command[1] == "claw":
+                    arm.claw_servo.set_angle(float(command[2]), force=True)
         else:
             if command[0] == "q" or command[0] == "quit":
                 shutdown()
