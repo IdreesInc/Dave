@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # pylint: disable=import-error
+
 import cv2
 import imutils
 from imutils.video import VideoStream
@@ -16,9 +17,12 @@ class Eye:
     def start(self):
         logger.log("Starting eye")
         self.cam = cv2.VideoCapture(0)
+        # Set stream type in order to fix Raspberry Pi 4 webcam problems
+        # This will result in useless "Corrupt JPEG" error messages, which the start.sh script filters out
+        self.cam.set(cv2.CAP_PROP_FOURCC,cv2.VideoWriter_fourcc('M','J','P','G'))
 
     def look(self):
-        ret_val, img = self.cam.read()
+        _, img = self.cam.read()
         self.frame = img
         return img
 

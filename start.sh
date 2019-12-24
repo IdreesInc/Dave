@@ -1,0 +1,1 @@
+python -u dave.py 2> >(sed -u '/^Corrupt/ d')
