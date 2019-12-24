@@ -13,6 +13,7 @@ This project is a work in progress, meaning that I am updating this repo as I go
 - Adafruit CircuitPython [ServoKit](https://github.com/adafruit/Adafruit_CircuitPython_ServoKit)
 - Adafruit Servo Hat [requirements](https://learn.adafruit.com/adafruit-16-channel-pwm-servo-hat-for-raspberry-pi/attach-and-test-the-hat)
 - OpenCV 4 and related requirements (following [these](https://www.pyimagesearch.com/2019/09/16/install-opencv-4-on-raspberry-pi-4-and-raspbian-buster/) instructions [does not require patented algorithms])
+- ZBar for QR code detection (instructions available [here](https://www.pyimagesearch.com/2018/05/21/an-opencv-barcode-and-qr-code-scanner-with-zbar/))
 
 
 ## Current Features
