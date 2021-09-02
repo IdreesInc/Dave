@@ -38,4 +38,4 @@ Plus it is cheap, and I needed a justification for spending all that time and mo
 Well it was either that or Steve
 
 <br/>
-<p align="center"><a href="http://idreesinc.com"><img src="http://idreesinc.com/images/logo_transparent.png" width=200 height=200></a></p>
+<p align="center"><a href="https://idreesinc.com?utm_source=github&utm_medium=readme&utm_campaign=dave"><img src="https://idreesinc.com/images/logo/logo-transparent.png" width=200 height=200></a></p>
